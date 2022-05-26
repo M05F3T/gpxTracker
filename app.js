@@ -1,22 +1,29 @@
 const settings = require('./js/settings.js');
+const gpxHandler = require('./js/gpxHandler.js');
+const fs = require('fs');
+
 const express = require('express');
+const { json } = require('express/lib/response');
 const app = express();
 const server = require('http').Server(app);
 
-startExpress(settings.servThisFile,settings.allowAccessTo);
+gpxHandler.convertGpxToJsonFile("run");
 
 
-function startExpress(filePath, directoryPath) {
-    // in case user tries to get "http://www.hostwebsite.com/" we send index.html
-    app.get('/', function (req, res) {
-        res.sendFile(__dirname + filePath);
-    });
+let raw = fs.readFileSync("./database/jsonData/run.json")
+let jsonFile = JSON.parse(raw);
 
-    //User can accses all files in /client (ex: http://www.hostwebsite.com/client/img.jpg)
-    app.use('/client', express.static(__dirname + directoryPath));
 
-    //listen to port specified in settings.
-    server.listen(settings.PORT);
+app.get('/', function (req, res) {
+    res.sendFile(__dirname + settings.servThisFile);
+});
 
-    console.log(`server started on PORT:${settings.PORT}`);
-}
+app.get('/json', function (req, res) {
+    res.json(jsonFile);
+});
+
+//User can accses all files in /client (ex: http://www.hostwebsite.com/client/img.jpg)
+app.use('/client', express.static(__dirname + settings.allowAccessTo));
+
+//listen to port specified in settings.
+server.listen(settings.PORT);
